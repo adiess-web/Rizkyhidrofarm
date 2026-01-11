@@ -1,1 +1,341 @@
-hallo
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rizky Hydrofarm Kebumen - Segar & Organik</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .active-nav { color: #10b981; }
+        .active-nav div { transform: scale(1.1); background-color: #ecfdf5; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+
+    <!-- Container Utama (Max-width Mobile) -->
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative flex flex-col">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
+                <img src="https://iili.io/fWsLuEl.png" alt="Logo Rizky Hydrofarm" class="w-10 h-10 object-contain">
+                <div class="flex flex-col">
+                    <span class="font-black text-emerald-950 text-sm tracking-tight leading-none uppercase">Rizky Hydrofarm</span>
+                    <span class="text-[10px] text-emerald-600 font-bold tracking-[0.2em] uppercase mt-1">Kebumen Fresh</span>
+                </div>
+            </div>
+            <button onclick="navigate('cart')" class="relative p-2.5 bg-emerald-50 rounded-2xl text-emerald-700">
+                <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                <span id="cart-count" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
+            </button>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="app-content" class="flex-1 pb-24">
+            <!-- Konten dinamis akan dimuat di sini -->
+        </main>
+
+        <!-- Navigation Bottom -->
+        <nav class="fixed bottom-6 left-6 right-6 max-w-[380px] mx-auto bg-slate-950/90 backdrop-blur-2xl flex justify-around items-center py-5 px-6 z-50 rounded-[2.5rem] shadow-2xl border border-white/10">
+            <button onclick="navigate('home')" class="nav-item flex flex-col items-center gap-1 text-white/40" id="nav-home">
+                <i data-lucide="home" class="w-5 h-5"></i>
+            </button>
+            <button onclick="navigate('shop')" class="nav-item flex flex-col items-center gap-1 text-white/40" id="nav-shop">
+                <i data-lucide="store" class="w-5 h-5"></i>
+            </button>
+            <button onclick="navigate('cart')" class="nav-item flex flex-col items-center gap-1 text-white/40" id="nav-cart">
+                <i data-lucide="shopping-basket" class="w-5 h-5"></i>
+            </button>
+            <button onclick="navigate('about')" class="nav-item flex flex-col items-center gap-1 text-white/40" id="nav-about">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </button>
+        </nav>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-28 left-1/2 -translate-x-1/2 z-[70] hidden">
+            <div class="bg-emerald-950 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 shadow-2xl border border-white/10">
+                <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+                <span id="toast-message" class="text-[11px] font-black uppercase tracking-widest">Berhasil!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Utama -->
+    <script>
+        // Data Produk
+        const PRODUCTS = [
+            { id: 1, name: 'Selada Keriting Hijau', price: 8500, unit: '250gr', category: 'Hidroponik', image: 'https://images.unsplash.com/photo-1622206141540-5844544d3fa5?q=80&w=800&auto=format&fit=crop', badge: 'Terlaris' },
+            { id: 2, name: 'Pakcoy Premium', price: 7000, unit: '250gr', category: 'Hidroponik', image: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?q=80&w=800&auto=format&fit=crop', badge: 'Panen Pagi' },
+            { id: 3, name: 'Bayam Hijau Organik', price: 6000, unit: 'Ikat', category: 'Organik', image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=800&auto=format&fit=crop', badge: 'Alami' },
+            { id: 4, name: 'Kangkung Hidroponik', price: 5000, unit: 'Ikat', category: 'Hidroponik', image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?q=80&w=800&auto=format&fit=crop', badge: 'Renyah' },
+            { id: 5, name: 'Paket Sayur Sehat', price: 55000, unit: 'Paket', category: 'Hemat', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop', badge: 'Hemat 15%' }
+        ];
+
+        let cart = [];
+        let currentPage = 'home';
+
+        // Navigasi
+        function navigate(page) {
+            currentPage = page;
+            const content = document.getElementById('app-content');
+            window.scrollTo(0,0);
+            
+            // Update Nav UI
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('text-emerald-400'));
+            document.getElementById(`nav-${page}`).classList.add('text-emerald-400');
+
+            if (page === 'home') renderHome();
+            else if (page === 'shop') renderShop();
+            else if (page === 'cart') renderCart();
+            else if (page === 'about') renderAbout();
+
+            lucide.createIcons();
+        }
+
+        // Render Home
+        function renderHome() {
+            const html = `
+                <div class="animate-fade-in px-6 pt-6">
+                    <!-- Hero -->
+                    <div class="relative rounded-[3rem] overflow-hidden h-[420px] flex items-center p-8 mb-10">
+                        <img src="https://images.unsplash.com/photo-1558449028-b53a39d100fc?q=80&w=1200&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover brightness-[0.7]">
+                        <div class="relative z-10 text-white">
+                            <h2 class="text-4xl font-black mb-4 leading-tight">Segar Dari Kebun Kebumen.</h2>
+                            <p class="text-white/80 text-sm mb-8">Sayuran hidroponik & organik tanpa pestisida berbahaya.</p>
+                            <button onclick="navigate('shop')" class="bg-emerald-600 text-white px-8 py-4 rounded-3xl font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                                Belanja Sekarang <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="grid grid-cols-2 gap-4 mb-10">
+                        <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col gap-3">
+                            <i data-lucide="leaf" class="text-emerald-600 w-6 h-6"></i>
+                            <h4 class="font-black text-xs uppercase">100% Organik</h4>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col gap-3">
+                            <i data-lucide="zap" class="text-emerald-600 w-6 h-6"></i>
+                            <h4 class="font-black text-xs uppercase">Panen Harian</h4>
+                        </div>
+                    </div>
+
+                    <!-- Popular -->
+                    <h3 class="text-xl font-black mb-6 uppercase tracking-tighter">Paling Segar</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        ${PRODUCTS.slice(0, 4).map(p => productCard(p)).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('app-content').innerHTML = html;
+        }
+
+        // Render Shop
+        function renderShop() {
+            const html = `
+                <div class="animate-fade-in px-6 pt-10">
+                    <h2 class="text-4xl font-black mb-2 uppercase tracking-tighter">Katalog</h2>
+                    <p class="text-slate-400 text-sm mb-8">Pilih sayuran terbaik hari ini.</p>
+                    
+                    <div class="grid grid-cols-2 gap-5">
+                        ${PRODUCTS.map(p => productCard(p)).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('app-content').innerHTML = html;
+        }
+
+        // Render Cart
+        function renderCart() {
+            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            let html = `
+                <div class="animate-fade-in px-6 pt-10">
+                    <h2 class="text-4xl font-black mb-8 uppercase tracking-tighter">Keranjang</h2>
+            `;
+
+            if (cart.length === 0) {
+                html += `
+                    <div class="text-center py-20">
+                        <i data-lucide="shopping-bag" class="w-16 h-16 mx-auto text-slate-200 mb-4"></i>
+                        <p class="text-slate-400 font-bold">Keranjang masih kosong</p>
+                        <button onclick="navigate('shop')" class="mt-6 text-emerald-600 font-black text-xs uppercase tracking-widest">Mulai Belanja</button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="space-y-4 mb-10">
+                        ${cart.map(item => `
+                            <div class="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-50 shadow-sm">
+                                <img src="${item.image}" class="w-16 h-16 object-cover rounded-2xl">
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-xs uppercase">${item.name}</h4>
+                                    <p class="text-emerald-700 font-black">Rp ${item.price.toLocaleString('id-ID')}</p>
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <button onclick="updateQty(${item.id}, -1)" class="bg-slate-100 p-1 rounded-lg"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                        <span class="text-xs font-black">${item.qty}</span>
+                                        <button onclick="updateQty(${item.id}, 1)" class="bg-slate-100 p-1 rounded-lg"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    </div>
+                                </div>
+                                <button onclick="removeFromCart(${item.id})" class="text-slate-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="bg-emerald-950 p-8 rounded-[2.5rem] text-white mb-10">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Total Bayar</p>
+                        <h3 class="text-3xl font-black">Rp ${total.toLocaleString('id-ID')}</h3>
+                    </div>
+                    <div class="space-y-4 mb-10">
+                        <h4 class="font-black uppercase tracking-widest text-[10px]">Data Pengiriman</h4>
+                        <input id="form-name" type="text" placeholder="Nama Lengkap" class="w-full p-5 rounded-3xl bg-slate-50 border-none outline-none text-sm font-bold">
+                        <textarea id="form-address" placeholder="Alamat Lengkap di Kebumen" class="w-full p-5 rounded-3xl bg-slate-50 border-none outline-none text-sm font-bold h-32"></textarea>
+                        <button onclick="checkoutWA()" class="w-full bg-emerald-600 text-white py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-emerald-200">
+                            Checkout via WhatsApp
+                        </button>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            document.getElementById('app-content').innerHTML = html;
+        }
+
+        // Render About
+        function renderAbout() {
+            const html = `
+                <div class="animate-fade-in">
+                    <div class="relative h-60 flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1530836361283-306ad0f7bcd4?q=80&w=1200&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover brightness-50">
+                        <h2 class="relative z-10 text-white text-3xl font-black uppercase tracking-tighter">Tentang Kami</h2>
+                    </div>
+                    <div class="p-8 space-y-8">
+                        <div class="text-center">
+                            <img src="https://iili.io/fWsLuEl.png" class="w-24 h-24 mx-auto mb-4 bg-white p-4 rounded-[2rem] shadow-xl">
+                            <h3 class="font-black text-xl text-emerald-950">Rizky Hydrofarm Kebumen</h3>
+                            <p class="text-slate-400 text-xs mt-1 uppercase tracking-widest font-bold">Segar • Sehat • Organik</p>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed font-medium">Kami adalah produsen sayuran hidroponik dan organik lokal dari Kebumen yang berkomitmen menyediakan pangan sehat bebas pestisida untuk keluarga Anda.</p>
+                        <div class="bg-emerald-50 p-8 rounded-[2.5rem] border border-emerald-100 flex items-center gap-4">
+                            <i data-lucide="map-pin" class="text-emerald-600 w-8 h-8"></i>
+                            <div>
+                                <h4 class="font-black text-sm uppercase">Lokasi Kebun</h4>
+                                <p class="text-xs text-emerald-800/60">Jl. Pahlawan No. 45, Kebumen</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('app-content').innerHTML = html;
+        }
+
+        // Helper: Product Card HTML
+        function productCard(p) {
+            return `
+                <div class="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm group active:scale-95 transition-all">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="${p.image}" class="w-full h-full object-cover">
+                        <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black text-emerald-900 shadow-sm uppercase">
+                            ${p.badge}
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-xs mb-1 truncate">${p.name}</h3>
+                        <p class="text-emerald-700 font-black text-base mb-4">Rp ${p.price.toLocaleString('id-ID')}</p>
+                        <button onclick="addToCart(${p.id})" class="w-full bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Tambah
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Core Functions
+        function addToCart(id) {
+            const product = PRODUCTS.find(p => p.id === id);
+            const exists = cart.find(item => item.id === id);
+            
+            if (exists) {
+                exists.qty++;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            
+            updateCartCount();
+            showToast(`${product.name} ditambah!`);
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.qty = Math.max(1, item.qty + delta);
+                renderCart();
+                updateCartCount();
+            }
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(i => i.id !== id);
+            renderCart();
+            updateCartCount();
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            const el = document.getElementById('cart-count');
+            if (count > 0) {
+                el.innerText = count;
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2000);
+            lucide.createIcons();
+        }
+
+        function checkoutWA() {
+            const name = document.getElementById('form-name').value;
+            const address = document.getElementById('form-address').value;
+            
+            if (!name || !address) {
+                showToast("Isi data lengkap!");
+                return;
+            }
+
+            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            let message = `*HALO RIZKY HYDROFARM KEBUMEN*\nSaya ingin pesan sayur segar:\n\n`;
+            
+            cart.forEach((item, i) => {
+                message += `${i+1}. ${item.name} (${item.qty}x) = Rp ${(item.price * item.qty).toLocaleString('id-ID')}\n`;
+            });
+            
+            message += `\n*TOTAL: Rp ${total.toLocaleString('id-ID')}*\n\n`;
+            message += `*Penerima:* ${name}\n`;
+            message += `*Alamat:* ${address}\n\nMohon segera diproses ya kak. Terima kasih! 🌱`;
+
+            const encoded = encodeURIComponent(message);
+            window.open(`https://wa.me/6285134586250?text=${encoded}`, '_blank');
+        }
+
+        // Inisialisasi
+        window.onload = () => {
+            navigate('home');
+        };
+    </script>
+</body>
+</html>
